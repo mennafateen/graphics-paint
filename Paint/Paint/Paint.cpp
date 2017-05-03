@@ -7,6 +7,7 @@
 #include <math.h>
 #include <Commdlg.h>
 #include <vector>
+#define dot ( a , b ) (( conj ( a ) * ( b )). real ())
 #define PI 3.14
 using namespace std;
 
@@ -24,9 +25,11 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 LPCWSTR choice;
 COLORREF objColor = RGB(0, 0, 0); // line color
+COLORREF fillColor;
 HDC hdc;
 COLORREF gColor; // background color
 int xLeft = 150, xRight = 850, yTop = 50, yBottom = 400;
+int radius = 180, xc = 470, yc = 200;
 
 //===========================
 // LINE
@@ -72,9 +75,9 @@ void drawDDALine(HDC hdc, int xs, int ys, int xe, int ye, COLORREF color)
 	}
 }
 
-//====================
+//===========================
 // CIRCLE
-//================
+//===========================
 
 void draw8Points(int xc, int yc, int a, int b, COLORREF color, HDC hdc) {
 	SetPixel(hdc, xc + a, yc + b, color);
@@ -301,6 +304,168 @@ void pointClipping(int x, int y, int xleft, int ytop, int xright, int ybottom, C
 		SetPixel(hdc, x, y, color);
 }
 
+union OutCode
+{
+	unsigned All : 4;
+	struct { unsigned left : 1, top : 1, right : 1, bottom : 1; };
+};
+
+OutCode GetOutCode(double x, double y, int xleft, int ytop, int xright, int ybottom)
+{
+	OutCode out;
+	out.All = 0;
+	if (x<xleft)out.left = 1; else if (x>xright)out.right = 1;
+	if (y<ytop)out.top = 1; else if (y>ybottom)out.bottom = 1;
+	return out;
+}
+
+void VIntersect(double xs, double ys, double xe, double ye, int x, double *xi, double *yi)
+{
+	*xi = x;
+	*yi = ys + (x - xs)*(ye - ys) / (xe - xs);
+}
+void HIntersect(double xs, double ys, double xe, double ye, int y, double *xi, double *yi)
+{
+	*yi = y;
+	*xi = xs + (y - ys)*(xe - xs) / (ye - ys);
+}
+
+void CohenSuth(HDC hdc, int xs, int ys, int xe, int ye, int xleft, int ytop, int xright, int ybottom)
+{
+	double x1 = xs, y1 = ys, x2 = xe, y2 = ye;
+	OutCode out1 = GetOutCode(x1, y1, xleft, ytop, xright, ybottom);
+	OutCode out2 = GetOutCode(x2, y2, xleft, ytop, xright, ybottom);
+	while ((out1.All || out2.All) && !(out1.All & out2.All))
+	{
+		double xi, yi;
+		if (out1.All)
+		{
+			if (out1.left)VIntersect(x1, y1, x2, y2, xleft, &xi, &yi);
+			else if (out1.top)HIntersect(x1, y1, x2, y2, ytop, &xi, &yi);
+			else if (out1.right)VIntersect(x1, y1, x2, y2, xright, &xi, &yi);
+			else HIntersect(x1, y1, x2, y2, ybottom, &xi, &yi);
+			x1 = xi;
+			y1 = yi;
+			out1 = GetOutCode(x1, y1, xleft, ytop, xright, ybottom);
+		}
+		else
+		{
+			if (out2.left)VIntersect(x1, y1, x2, y2, xleft, &xi, &yi);
+			else if (out2.top)HIntersect(x1, y1, x2, y2, ytop, &xi, &yi);
+			else if (out2.right)VIntersect(x1, y1, x2, y2, xright, &xi, &yi);
+			else HIntersect(x1, y1, x2, y2, ybottom, &xi, &yi);
+			x2 = xi;
+			y2 = yi;
+			out2 = GetOutCode(x2, y2, xleft, ytop, xright, ybottom);
+		}
+	}
+	if (!out1.All && !out2.All)
+	{
+		MoveToEx(hdc, round(x1), round(y1), NULL);
+		LineTo(hdc, round(x2), round(y2));
+	}
+}
+
+void circlePoint(HDC hdc, int x, int y, int xc, int yc, int radius, COLORREF color) {
+	int distance = sqrt(pow((xc - x), 2) + pow((yc - y), 2));
+	if (distance <= radius)
+		SetPixel(hdc, x, y, color);
+}
+
+int circleLineIntersection(const POINT & p0, const POINT & p1,const POINT & cen, double rad, POINT & r1, POINT &r2) {
+	// handle degenerate case if p0 == p1
+	double a, b, c, t1, t2;
+		a = dot(p1 - p0, p1 - p0)?
+		b = 2 * dot(p1 - p0, p0 - cen);
+		c = dot(p0 - cen, p0 - cen) - rad * rad;
+		double det = b * b - 4 * a * c ?
+		int res?
+		if (fabs(det) < EPS)
+			det = 0, res = 1 ?
+		else if (det < 0)
+			res = 0 ?
+		else
+			res = 2 ?
+			det = sqrt(det)?
+			t1 = (-b + det) / (2 * a)?
+			t2 = (-b - det) / (2 * a)?
+			r1 = p0 + t1 * (p1 - p0)?
+			r2 = p0 + t2 * (p1 - p0)?
+			return res?
+}
+
+void circleLine(HDC hdc, int x0, int y0, int x1, int y1, int xc, int yc, int radius, COLORREF color) {
+
+	bool insidex0 = false, insidex1 = false;
+	int distancex0 = sqrt(pow((xc - x0), 2) + pow((yc - y0), 2));
+	int distancex1 = sqrt(pow((xc - x1), 2) + pow((yc - y1), 2));
+	if (distancex0 <= radius) // if inside
+		insidex0 = true;
+	if (distancex1 <= radius) // if inside
+		insidex1 = true;
+
+
+}
+
+//==================
+// FILLING
+//==================
+
+
+struct Entry
+{
+	int xmin, xmax;
+};
+
+void InitEntries(Entry table[])
+{
+	for (int i = 0; i<600; i++)
+	{
+		table[i].xmin = MAXINT;
+		table[i].xmax = -MAXINT;
+	}
+}
+
+void ScanEdge(POINT v1, POINT v2, Entry table[])
+{
+	if (v1.y == v2.y)return;
+	if (v1.y>v2.y)swap(v1, v2);
+	double minv = (double)(v2.x - v1.x) / (v2.y - v1.y);
+	double x = v1.x;
+	int y = v1.y;
+	while (y<v2.y)
+	{
+		if (x<table[y].xmin)table[y].xmin = (int)ceil(x);
+		if (x>table[y].xmax)table[y].xmax = (int)floor(x);
+		y++;
+		x += minv;
+	}
+}
+
+void DrawSanLines(HDC hdc, Entry table[], COLORREF color)
+{
+	for (int y = 0; y<600; y++)
+		if (table[y].xmin<table[y].xmax)
+			for (int x = table[y].xmin; x <= table[y].xmax; x++)
+				SetPixel(hdc, x, y, color);
+}
+
+void ConvexFill(HDC hdc, POINT p[], int n, COLORREF color)
+{
+	Entry *table = new Entry[600];
+	InitEntries(table);
+	POINT v1 = p[n - 1];
+	for (int i = 0; i<n; i++)
+	{
+		POINT v2 = p[i];
+		ScanEdge(v1, v2, table);
+		v1 = p[i];
+	}
+	DrawSanLines(hdc, table, color);
+	delete table;
+}
+
+
 //==================
 // MAIN
 //==================
@@ -371,12 +536,38 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	static int numOfPoints = 0;
+	static vector<POINT> ps;
     switch (message)
     {
+
+	case WM_RBUTTONDOWN: {
+		if (choice == L"convexfilling") {
+			hdc = GetDC(hWnd);
+			POINT * points = new POINT[numOfPoints];
+			fabs
+			for (int i = 0; i < numOfPoints; i++)
+				points[i] = ps[i];
+			ConvexFill(hdc, points, numOfPoints, fillColor);
+			ReleaseDC(hWnd, hdc);
+			numOfPoints = 0;
+			ps.clear();
+		}
+		else if (choice == L"spline") {
+			hdc = GetDC(hWnd);
+			POINT * points = new POINT[numOfPoints];
+			for (int i = 0; i < numOfPoints; i++)
+				points[i] = ps[i];
+			DrawCardinalSpline(hdc, points, 0.7, numOfPoints, objColor);
+			//ConvexFill(hdc, points, numOfPoints, fillColor);
+			ReleaseDC(hWnd, hdc);
+			numOfPoints = 0;
+			ps.clear();
+		}
+
+	} break;
 	case WM_LBUTTONDOWN: {
 		static int flag = 0;
-		static int numOfPoints = 0;
-		static vector<POINT> ps;
 		static int x0, y0, x1, y1, x2, y2, x3, y3;
 		if (choice == L"ddaline") {
 			if (flag == 0) {
@@ -535,20 +726,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		else if (choice == L"spline") {
 			numOfPoints++;
-			hdc = GetDC(hWnd);
+			//hdc = GetDC(hWnd);
 			x0 = LOWORD(lParam);
 			y0 = HIWORD(lParam);
 			POINT p;
 			p.x = x0;
 			p.y = y0;
 			ps.push_back(p);
-			if (numOfPoints == 4) {
-				POINT * points = new POINT[numOfPoints];
-				for (int i = 0; i < numOfPoints; i++)
-					points[i] = ps[i];
-				DrawCardinalSpline(hdc, points, 0.5, 4, objColor);
-			}
-			ReleaseDC(hWnd, hdc);
+			//if (numOfPoints == 4) {
+				//POINT * points = new POINT[numOfPoints];
+				//for (int i = 0; i < numOfPoints; i++)
+					//points[i] = ps[i];
+				//DrawCardinalSpline(hdc, points, 0.5, 4, objColor);
+			//}
+			//ReleaseDC(hWnd, hdc);
 		}
 		else if (choice == L"firstdegree") {
 			if (flag == 0) {
@@ -571,6 +762,56 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			y0 = HIWORD(lParam);
 			pointClipping(x0, y0, xLeft, yTop, xRight, yBottom, objColor);
 			ReleaseDC(hWnd, hdc);
+		}
+		else if (choice == L"lineclipping") {
+			if (flag == 0) {
+				x0 = LOWORD(lParam);
+				y0 = HIWORD(lParam);
+				flag++;
+			}
+			else if (flag == 1) {
+				x1 = LOWORD(lParam);
+				y1 = HIWORD(lParam);
+				hdc = GetDC(hWnd);
+				CohenSuth(hdc, x0, y0, x1, y1, xLeft, yTop, xRight, yBottom);
+				ReleaseDC(hWnd, hdc);
+				flag = 0;
+			}
+		}
+		else if (choice == L"circlepoint") {
+			hdc = GetDC(hWnd);
+			x0 = LOWORD(lParam);
+			y0 = HIWORD(lParam);
+			circlePoint(hdc, x0, y0, xc, yc, radius, objColor);
+			ReleaseDC(hWnd, hdc);
+		}
+		else if (choice == L"circleline") {
+			if (flag == 0) {
+				x0 = LOWORD(lParam);
+				y0 = HIWORD(lParam);
+				flag++;
+			}
+			else if (flag == 1) {
+				x1 = LOWORD(lParam);
+				y1 = HIWORD(lParam);
+				hdc = GetDC(hWnd);
+				//circleLine(hdc, x0, y0, x1, y1, xc, yc, radius);
+				ReleaseDC(hWnd, hdc);
+				flag = 0;
+			}
+		}
+		else if (choice == L"convexfilling") {
+			numOfPoints++;
+			//hdc = GetDC(hWnd);
+			x0 = LOWORD(lParam);
+			y0 = HIWORD(lParam);
+			POINT p;
+			p.x = x0;
+			p.y = y0;
+			ps.push_back(p);
+		//	if (numOfPoints == 4) {
+			//	
+
 		}
 
 		break;
@@ -633,9 +874,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				drawParametricLine(xRight, yBottom, xLeft, yBottom, objColor, hdc);
 				ReleaseDC(hWnd, hdc);
 			} break;
+			case ID_CLIPPING_CIRCLEPOINT: {
+				choice = L"circlepoint";
+				hdc = GetDC(hWnd);
+				drawPolarCircle(hdc, radius, xc, yc, objColor);
+				ReleaseDC(hWnd, hdc);
+			} break;
+			case ID_CLIPPING_LINE: {
+				choice = L"lineclipping";
+				hdc = GetDC(hWnd);
+				drawParametricLine(xLeft, yTop, xLeft, yBottom, objColor, hdc);
+				drawParametricLine(xLeft, yTop, xRight, yTop, objColor, hdc);
+				drawParametricLine(xRight, yTop, xRight, yBottom, objColor, hdc);
+				drawParametricLine(xRight, yBottom, xLeft, yBottom, objColor, hdc);
+				ReleaseDC(hWnd, hdc);
+			} break;
+			case ID_CLIPPING_CIRCLELINE: {
+				choice = L"circleline";
+				hdc = GetDC(hWnd);
+				drawPolarCircle(hdc, radius, xc, yc, objColor);
+				ReleaseDC(hWnd, hdc);
+			} break;
 			case ID_FILL_BACKGROUND: {
 				gColor = ShowColorDialog(hWnd);
 				InvalidateRect(hWnd, NULL, TRUE);
+			} break;
+			case ID_FILL_OBJECT: {
+				choice = L"convexfilling";
+				fillColor = ShowColorDialog(hWnd);
 			} break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);

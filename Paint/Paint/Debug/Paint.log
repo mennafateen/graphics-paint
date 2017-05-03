@@ -1,15 +1,20 @@
 ﻿  Paint.cpp
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(41): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(59): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(70): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(93): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(94): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(121): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(126): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(133): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(156): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(171): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(183): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(199): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\menna\desktop\paint\paint\paint\paint.cpp(217): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(43): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(61): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(72): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(95): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(96): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(123): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(128): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(135): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(158): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(173): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(185): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(201): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(219): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(363): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(364): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(369): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(377): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\menna\desktop\paint\paint\paint\paint.cpp(378): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Paint.vcxproj -> C:\Users\menna\Desktop\Paint\Paint\Debug\Paint.exe
